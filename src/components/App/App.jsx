@@ -29,9 +29,16 @@ const App = () => {
           toast.success(`Nothing found for your request :${query}`);
           return;
         }
-        setHits(prevHits => [...prevHits, ...hits]);
+        const images = hits.map(
+          ({ tags, id, webformatURL, largeImageURL }) => ({
+            tags,
+            id,
+            webformatURL,
+            largeImageURL,
+          })
+        );
+        setHits(prevHits => [...prevHits, ...images]);
         setTotalHits(totalHits);
-        setLoading(false);
       } catch (error) {
         toast.error('Something went wrong : Try reloading the page.');
       } finally {
@@ -40,12 +47,18 @@ const App = () => {
     }
     fetshBase();
   }, [query, page]);
-
-  console.log(query.length);
-  const handleSubmit = query => {
-    setQuery(query);
+  const handleSubmit = newQuery => {
+    if (newQuery === query) {
+      toast.success(
+        `You have already entered the query :${query}.
+        Please refresh the page and try again, or enter a different query.`
+      );
+      return;
+    }
+    setQuery(newQuery);
     setHits([]);
     setPage(1);
+    setTotalHits(0);
   };
 
   const incrementImage = () => {
@@ -65,7 +78,7 @@ const App = () => {
           <ImgGallery selectImage={selectImage} hits={hits} />
         )}
 
-        {Boolean(totalHits) && totalHits !== hits.length && (
+        {Boolean(totalHits) && totalHits !== hits.length && !loading && (
           <Button loadMoreProp={incrementImage} />
         )}
         {selectedImage !== null && (
